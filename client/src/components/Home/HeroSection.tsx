@@ -2,7 +2,6 @@
 import { motion } from "framer-motion";
 import { Plus, Zap, BotMessageSquare } from "lucide-react";
 
-// Subtle grid pattern overlay for texture
 
 
 const HeroSection = () => {
