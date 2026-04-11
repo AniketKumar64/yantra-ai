@@ -126,6 +126,7 @@ const MyProjects = () => {
           >
          {projects.map((project) => (
   <motion.div
+  onClick={()=>navigate(`/projects/${project.id}`)}
     key={project.id}
     initial="hidden"
     whileInView="visible"
@@ -134,7 +135,7 @@ const MyProjects = () => {
       hidden: { opacity: 0, y: 10 },
       visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
     }}
-    className="group relative flex flex-col h-[400px] bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden transition-all duration-300 hover:border-[var(--primary)]/50 hover:shadow-[0_0_25px_-10px_var(--primary)]"
+    className="group relative flex flex-col h-full bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden transition-all duration-300 hover:border-[var(--primary)]/50 hover:shadow-[0_0_25px_-10px_var(--primary)]"
   >
     <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]/50 bg-[var(--muted)]/5">
       <div className="flex items-center gap-2">
