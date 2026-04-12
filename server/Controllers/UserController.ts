@@ -3,6 +3,8 @@ import { Request, Response } from "express";
 import prisma from "../lib/prisma.js";
 import openai from "../config/openai.js";
 
+// controller to get user credits
+
 export const getUserCredits = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
@@ -54,7 +56,7 @@ export const createUserProject = async (req: Request, res: Response) => {
     await prisma.user.update({
       where: { id: userId },
       data: {
-        totalCreations: { increment: 1 },
+        totalCreation: { increment: 1 },
       },
     });
 
@@ -253,14 +255,14 @@ export const getUserProject = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized: User ID missing" });
     }
 
-    const { projectId } = req.params;
+    const projectId = req.params.projectId as string;
     // if (Array.isArray(projectId)) {
     //   return res.status(400).json({ message: "Invalid project ID" });
     // }
   
 
     const project = await prisma.websiteProject.findUnique({
-        where: { id: projectId, userId },
+        where: { id: projectId, userId: userId as string },
         include: {
             conversation:{
                 orderBy: {
@@ -317,13 +319,14 @@ export const toggleProjectPublish = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized: User ID missing" });
     }
 
-    const { projectId } = req.params;
+    const projectId = req.params.projectId as string;
     // if (Array.isArray(projectId)) {
     //   return res.status(400).json({ message: "Invalid project ID" });
     // }
 
+   
     const project = await prisma.websiteProject.findUnique({
-      where: { id: projectId, userId },
+      where: { id: projectId, userId: userId as string },
     });
 
     if (!project) {
