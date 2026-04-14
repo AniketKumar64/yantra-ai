@@ -11,7 +11,7 @@ ProjectRouter.get("/rollback/:projectId/:versionId",protect, rollbackVersion);
 ProjectRouter.delete("/:projectId",protect, deleteProject);
 ProjectRouter.get("/preview/:projectId",protect, getProjectPreview);
 ProjectRouter.get("/published/:projectId",protect, getProjectById);
-ProjectRouter.get("/published", publishProject);
+ProjectRouter.get("/published", protect, publishProject);
 
 
 

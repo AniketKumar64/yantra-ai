@@ -28,8 +28,24 @@ export const getUserCredits = async (req: Request, res: Response) => {
 
 export const createUserProject = async (req: Request, res: Response) => {
   const userId = req.userId;
+  let responseSent = false;
+
+  const callWithRetry = async (fn: () => Promise<any>, retries = 3, delay = 2000): Promise<any> => {
+    try {
+      return await fn();
+    } catch (error: any) {
+      if (error?.status === 429 && retries > 0) {
+        await new Promise((res) => setTimeout(res, delay));
+        return callWithRetry(fn, retries - 1, delay * 2);
+      }
+      throw error;
+    }
+  };
+
   try {
     const { initial_prompt } = req.body;
+    
+
     if (!userId) {
       return res.status(400).json({ message: "User ID not found in request" });
     }
@@ -75,39 +91,58 @@ export const createUserProject = async (req: Request, res: Response) => {
       },
     });
 
+    // Send response AFTER all DB setup is done, before heavy async work
     res.json({ projectId: project.id });
+    responseSent = true;
 
-    // enchance prompt
+    // Enhance prompt (with retry)
+    const promptEnchanceResponse = await callWithRetry(() =>
+      openai.chat.completions.create({
+        model: "deepseek/deepseek-chat-v3-0324",
+        messages: [
+          {
+            role: "system",
+        content: `
+You are an expert frontend developer.
 
-    const promptEnchanceResponse = await openai.chat.completions.create({
-      model: "z-ai/glm-4.5-air:free",
-      messages: [
-        {
-          role: "system",
-          content: `
-You are a master UI/UX Architect specializing in high-end Glassmorphism, Bento-grid layouts, and sophisticated modern aesthetics. Your task is to transform the user's basic website request into a comprehensive, professional-grade technical design prompt.
+Your task is to transform the user's request into a clear, precise, and implementation-ready instruction.
 
-To enhance the prompt, you must:
+CRITICAL RULES:
 
-Visual Language: Define a "Premium Glassmorphism" style using translucent layers, high-chroma blur backgrounds, soft-glow borders, and layered depth. Instead of fixed colors, intelligently generate a cohesive color palette based on the user's intent, industry, or product type (e.g., dark futuristic tones for tech, soft neutrals for corporate, bold gradients for creative brands). Ensure high contrast, visual harmony, and consistent theming across all components with refined typography hierarchy.
+- Return ONLY the enhanced prompt
+- Do NOT include explanations, comments, or extra text
+- Keep the output concise (maximum 2 paragraphs)
 
-Structural Integrity: Design a modern layout utilizing Bento-style grids, parallax scrolling, or layered stack containers. Clearly define key sections such as an immersive Hero with strong CTA, feature showcases, content grids, testimonials or trust signals, and a well-structured interactive footer. Maintain consistent spacing, alignment, and visual rhythm.
+ENHANCEMENT RULES:
 
-Dynamic Interactions: Describe fluid Framer Motion animations including scroll-based reveals, hover-triggered glass reflections, magnetic button effects, subtle scaling, and smooth transitions that enhance usability without overwhelming performance.
+- Clearly identify which sections or components need to be modified or created
+- Specify exact visual changes (colors, spacing, typography, layout, alignment)
+- Mention interaction or behavior changes if relevant (hover, animations, transitions)
+- Keep instructions technical, direct, and actionable
 
-Modern Standards: Enforce strict responsive design (mobile-first), accessibility (WCAG compliance, readable contrast), optimized asset loading, and clean, modular component architecture suitable for modern frameworks like React and Tailwind CSS.
+RESTRICTIONS:
 
-Output Protocol: Return ONLY the enhanced prompt. The output must be a detailed, exactly 2-paragraph "Master Brief" with dense, implementation-ready design and interaction details for building a world-class web experience.
-`,
-        },
-        {
-          role: "user",
-          content: initial_prompt,
-        },
-      ],
-    });
+- Do NOT redesign the entire website unless explicitly requested
+- Do NOT add unnecessary features or sections
+- Focus only on what the user asked
+
+FINAL OUTPUT:
+
+- Only the improved prompt
+- No extra text
+`
+          },
+          {
+            role: "user",
+            content: initial_prompt,
+          },
+        ],
+      })
+    );
 
     const enhancedPrompt = promptEnchanceResponse.choices[0].message.content;
+
+   
 
     await prisma.conversation.create({
       data: {
@@ -125,87 +160,96 @@ Output Protocol: Return ONLY the enhanced prompt. The output must be a detailed,
       },
     });
 
-    const codeGenerationResponse = await openai.chat.completions.create({
-      model: "z-ai/glm-4.5-air:free",
-      messages: [
-        {
-          role: "system",
+    // Generate code (with retry)
+    const codeGenerationResponse = await callWithRetry(() =>
+      openai.chat.completions.create({
+        model: "deepseek/deepseek-chat-v3-0324",
+        messages: [
+          {
+            role: "system",
           content: `
-You are an expert frontend developer and UI engineer. Generate a complete, production-ready, single-page website based on the following design brief:
+You are an expert frontend developer.
 
+Your task is to generate a complete HTML website based on the user request.
+
+CRITICAL RULES:
+
+- Return ONLY the complete HTML code
+- Do NOT include explanations, comments, or extra text
+- Do NOT use markdown (no \`\`\`html)
+- Output must always be a full standalone HTML document
+
+INPUT:
 "${enhancedPrompt}"
 
-REQUIREMENTS:
+STRUCTURE RULES:
 
-• Output MUST be valid, clean HTML only
-• Use Tailwind CSS for ALL styling (no custom CSS files)
-• Include this EXACT script inside <head>:
+- Use semantic HTML: <header>, <main>, <section>, <footer>
+- Keep structure clean and minimal
+- Do NOT add unnecessary sections unless clearly required
+
+STYLING RULES:
+
+- Use Tailwind CSS via CDN
+- Include this EXACT script inside <head>:
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+- Use only Tailwind utility classes
+- Do NOT add custom CSS
 
-• Use modern semantic HTML structure:
-  <header>, <main>, <section>, <footer>
+RESPONSIVENESS:
 
-• Ensure the website includes:
-  - Responsive navigation bar
-  - Hero section with strong CTA
-  - Features / services section (cards or grid)
-  - Content or showcase section
-  - Optional testimonials or stats
-  - Footer with useful links
+- Ensure mobile-first responsive layout
+- Use Tailwind breakpoints (sm, md, lg, xl) only where necessary
 
-• Design rules:
-  - Use Tailwind utility classes extensively
-  - Use gradients, glassmorphism, shadows, and spacing for premium UI
-  - Maintain consistent padding, margins, and alignment
-  - Use proper typography hierarchy (headings, subtext, body)
-  - Ensure strong visual contrast and readability
+JAVASCRIPT RULES:
 
-• Responsiveness:
-  - Fully responsive using sm:, md:, lg:, xl:
-  - Mobile-first layout
-  - Proper stacking and spacing on smaller screens
+- Include all JavaScript inside <script> before </body>
+- Only add minimal required interactivity (e.g., menu toggle)
 
-• Interactivity:
-  - Add JavaScript inside a <script> tag before </body>
-  - Include simple interactions like:
-    - mobile menu toggle
-    - button hover effects
-    - smooth scrolling
+FINAL OUTPUT:
 
-• Assets:
-  - Use placeholder images from https://placehold.co/600x400
-  - Use Google Fonts if needed
-
-• Meta:
-  - Include charset, viewport, and title
-  - Ensure fast-loading and minimal structure
-
-STRICT OUTPUT RULES:
-
-1. Output ONLY raw HTML
-2. Do NOT include markdown or code blocks
-3. Do NOT include explanations or comments
-4. Do NOT include anything outside the HTML document
-5. The result must be directly renderable in a browser
-
-Build a clean, modern, visually impressive website that reflects the design brief.`,
-        },
-        {
-          role: "user",
-          content: enhancedPrompt || "",
-        },
-      ],
-    });
+- Pure HTML code only
+- No extra text
+`
+          },
+          {
+            role: "user",
+            content: enhancedPrompt || "",
+          },
+        ],
+      })
+    );
 
     const code = codeGenerationResponse.choices[0].message.content || "";
 
+
+    if(!code){
+      await prisma.conversation.create({
+        data: {
+          role: "assistant",
+          content: `Sorry, there was an issue generating your website. Please try again.`,
+          projectId: project.id,
+        },
+      });
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          credits: { increment: 5 },
+        },
+      });
+      return;
+
+    }
+
+    const cleanCode = code
+      .replace(/```[a-z]*\n/g, "")
+      .replace(/```/g, "")
+      .replace(/```$/g, "")
+      .trim();
+
     const version = await prisma.version.create({
       data: {
-        code: code
-          .replace(/```[a-z]*\n/g, "")
-          .replace(/```/g, "")
-          .replace(/```$/g, "")
-          .trim(),
+        code: cleanCode,
         description: "Initial version",
         projectId: project.id,
       },
@@ -222,28 +266,192 @@ Build a clean, modern, visually impressive website that reflects the design brie
     await prisma.websiteProject.update({
       where: { id: project.id },
       data: {
-        current_code: code
-          .replace(/```[a-z]*\n/g, "")
-          .replace(/```/g, "")
-          .replace(/```$/g, "")
-          .trim(),
+        current_code: cleanCode,
         current_version_index: version.id,
       },
     });
-  } catch (error: any) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        credits: { increment: 5 },
-      },
-    });
 
+
+
+
+
+  } catch (error: any) {
     console.error("Error creating project:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+
+    // Only refund credits and send error response if response hasn't been sent yet
+    if (!responseSent) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          credits: { increment: 5 },
+        },
+      });
+      res.status(500).json({ message: "Internal Server Error" });
+    } else {
+      // Response already sent — log silently, optionally mark project as failed in DB
+      console.error("Background generation failed after response was sent for userId:", userId);
+    }
   }
 };
 
+// export const createUserProject = async (req: Request, res: Response) => {
+//   const userId = req.userId;
+//   try {
+//     const { initial_prompt } = req.body;
+
+//     if (!userId) {
+//       return res.status(400).json({ message: "User ID not found in request" });
+//     }
+
+//     const user = await prisma.user.findUnique({ where: { id: userId } });
+
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     if (user.credits < 5) {
+//       return res.status(400).json({ message: "Not enough credits" });
+//     }
+
+//     const project = await prisma.websiteProject.create({
+//       data: {
+//         name:
+//           initial_prompt.length > 50
+//             ? initial_prompt.substring(0, 47) + "..."
+//             : initial_prompt,
+//         initial_prompt,
+//         userId,
+//       },
+//     });
+
+//     await prisma.user.update({
+//       where: { id: userId },
+//       data: { totalCreation: { increment: 1 } },
+//     });
+
+//     await prisma.conversation.create({
+//       data: {
+//         role: "user",
+//         content: initial_prompt,
+//         projectId: project.id,
+//       },
+//     });
+
+//     await prisma.user.update({
+//       where: { id: userId },
+//       data: { credits: { decrement: 5 } },
+//     });
+
+//     // ✅ Send response FIRST, then run background work
+//     res.json({ projectId: project.id });
+
+//     // ✅ Everything below runs in background — errors won't crash the response
+//     runBackgroundGeneration(project.id, initial_prompt, userId).catch((err) => {
+//       console.error("Background generation failed:", err);
+//     });
+
+//   } catch (error: any) {
+//     console.error("Error creating project:", error);
+
+//     // Only refund if userId exists and credits were already deducted
+//     if (userId) {
+//       await prisma.user
+//         .update({
+//           where: { id: userId },
+//           data: { credits: { increment: 5 } },
+//         })
+//         .catch(console.error);
+//     }
+
+//     // ✅ Guard: only send error if response hasn't been sent yet
+//     if (!res.headersSent) {
+//       res.status(500).json({ message: "Internal Server Error" });
+//     }
+//   }
+// };
+
+// // ✅ Separated background function — clean and isolated
+// async function runBackgroundGeneration(
+//   projectId: string,
+//   initial_prompt: string,
+//   userId: string
+// ) {
+//   // Enhance prompt
+//   const promptEnhanceResponse = await openai.chat.completions.create({
+//      model: "deepseek/deepseek-chat-v3-0324",
+//     messages: [
+//       {
+//         role: "system",
+//         content: `You are a master UI/UX Architect...`, // your existing system prompt
+//       },
+//       { role: "user", content: initial_prompt },
+//     ],
+//   });
+
+//   const enhancedPrompt = promptEnhanceResponse.choices[0].message.content;
+
+//   await prisma.conversation.create({
+//     data: {
+//       role: "assistant",
+//       content: `Enhanced Prompt: ${enhancedPrompt}`,
+//       projectId,
+//     },
+//   });
+
+//   await prisma.conversation.create({
+//     data: {
+//       role: "assistant",
+//       content: `now generating your website...`,
+//       projectId,
+//     },
+//   });
+
+//   // Generate code
+//   const codeGenerationResponse = await openai.chat.completions.create({
+//      model: "deepseek/deepseek-chat-v3-0324",
+//     messages: [
+//       {
+//         role: "system",
+//         content: `You are an expert frontend developer...`, // your existing system prompt
+//       },
+//       { role: "user", content: enhancedPrompt || "" },
+//     ],
+//   });
+
+//   const rawCode = codeGenerationResponse.choices[0].message.content || "";
+//   const cleanCode = rawCode
+//     .replace(/```[a-z]*\n/g, "")
+//     .replace(/```/g, "")
+//     .trim();
+
+//   const version = await prisma.version.create({
+//     data: {
+//       code: cleanCode,
+//       description: "Initial version",
+//       projectId,
+//     },
+//   });
+
+//   await prisma.conversation.create({
+//     data: {
+//       role: "assistant",
+//       content: `Your website is ready! Version ID: ${version.id}`,
+//       projectId,
+//     },
+//   });
+
+//   await prisma.websiteProject.update({
+//     where: { id: projectId },
+//     data: {
+//       current_code: cleanCode,
+//       current_version_index: version.id,
+//     },
+//   });
+// }
+
 // controller to get a projects of single  user projects
+
+
 
 
 export const getUserProject = async (req: Request, res: Response) => {
