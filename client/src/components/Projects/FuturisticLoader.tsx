@@ -35,7 +35,7 @@ export default function EmberLoader() {
 
     const t2 = setInterval(() => {
       setProgress((p) => {
-        const next = Math.min(p + Math.random() * 3 + 0.5, 100);
+        const next = Math.min(p + Math.random() * 2 + 0.5, 98);
         return next;
       });
     }, 450);

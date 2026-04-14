@@ -362,76 +362,69 @@ useEffect(() => {
 </header>
 
       {/* --- MAIN CONTENT --- */}
-   <main className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-[var(--background)]">
-
-  <AnimatePresence>
-  {isChatOpen && (
-    <motion.div
-      initial={{ y: "100%" }}
-      animate={{ y: 0 }}
-      exit={{ y: "100%" }}
-      transition={{ duration: 0.3 }}
-      className="fixed inset-0 z-50 bg-[var(--background)]"
-    >
-      {/* Header */}
-      <div className="h-14 flex items-center justify-between px-3 border-b border-[var(--border)]">
-        <span className="text-sm font-semibold">AI Chat</span>
-        <button onClick={() => setIsChatOpen(false)}>
-          <X size={18} />
-        </button>
-      </div>
-
-      {/* Chat Content */}
-      <Leftside
-        isMenuOpen={isMenuOpen}
-        setProject={(p)=> setProject(p)}
-        project={project!}
-        isGenerating={isGenerating}
-        setisGenerating={setIsGenerating}
-      />
-    </motion.div>
-  )}
-</AnimatePresence>
-
-   <Leftside 
-    isMenuOpen={isMenuOpen} 
-    setProject={(p)=> setProject(p)} 
-    project={project!} 
-    isGenerating={isGenerating}
-    setisGenerating={setIsGenerating}
-   />
-   <div className="flex-1 p-2 pl-0">
-    <ProjectPreview ref={previewRef} project={project} isGenerating={isGenerating} device={device} />
-   </div>
-<div className="fixed md:hidden bottom-4 right-4 z-50">
+   {/* --- MAIN CONTENT --- */}
+<main className="flex-1 flex overflow-hidden bg-[var(--background)] relative">
   
-  <button
-    onClick={() => setIsChatOpen(true)}
-    className="
-      flex items-center gap-2
-      px-4 py-3
-      rounded-full 
-      bg-[var(--primary)] text-white 
-      shadow-lg shadow-[var(--primary)]/30
-      active:scale-95
-      transition-all duration-200
-    "
-  >
-    <MessageSquare size={18} />
-    <span className="text-sm font-medium">
-      Edit Page
-    </span>
-  </button>
+  {/* MOBILE CHAT OVERLAY (Keep as is) */}
+  <AnimatePresence>
+    {isChatOpen && (
+      <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 z-[60] bg-[var(--background)] lg:hidden"
+      >
+        <div className="h-14 flex items-center justify-between px-3 border-b border-[var(--border)]">
+          <span className="text-sm font-semibold">AI Chat</span>
+          <button onClick={() => setIsChatOpen(false)}>
+            <X size={18} />
+          </button>
+        </div>
+        <Leftside
+          isMenuOpen={isMenuOpen}
+          setProject={(p) => setProject(p)}
+          project={project!}
+          isGenerating={isGenerating}
+          setisGenerating={setIsGenerating}
+        />
+      </motion.div>
+    )}
+  </AnimatePresence>
 
-</div>
-    {/* <RightSide
-      project={project!}
-      device={device}
-      activeTab={activeTab}
-      deviceWidths={deviceWidths}
-    /> */}
+  {/* DESKTOP SIDEBAR - Added fixed width and hidden on mobile */}
+  <div className="hidden lg:block w-[350px] xl:w-[400px] border-r border-[var(--border)] h-full overflow-y-auto shrink-0 bg-[var(--card)]/30">
+    <Leftside 
+      isMenuOpen={isMenuOpen} 
+      setProject={(p) => setProject(p)} 
+      project={project!} 
+      isGenerating={isGenerating}
+      setisGenerating={setIsGenerating}
+    />
+  </div>
 
+  {/* PREVIEW AREA - Added flex-1 and min-w-0 to prevent content overflow */}
+  <div className="flex-1 relative h-full min-w-0 bg-[var(--muted)]/10  overflow-hidden">
+    <div className="w-full h-full  border border-[var(--border)] bg-[var(--background)] overflow-hidden shadow-inner">
+      <ProjectPreview 
+        ref={previewRef} 
+        project={project} 
+        isGenerating={isGenerating} 
+        device={device} 
+      />
+    </div>
+  </div>
 
+  {/* MOBILE FAB */}
+  <div className="fixed lg:hidden bottom-6 right-6 z-50">
+    <button
+      onClick={() => setIsChatOpen(true)}
+      className="flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--primary)] text-white shadow-xl shadow-[var(--primary)]/40 active:scale-95 transition-all"
+    >
+      <MessageSquare size={18} />
+      <span className="text-sm font-bold tracking-tight">Edit Page</span>
+    </button>
+  </div>
 </main>
     </div>
   ):( 

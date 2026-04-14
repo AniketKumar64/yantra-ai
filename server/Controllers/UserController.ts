@@ -44,6 +44,7 @@ export const createUserProject = async (req: Request, res: Response) => {
 
   try {
     const { initial_prompt } = req.body;
+    console.log("Received create project request with prompt:", initial_prompt);
     
 
     if (!userId) {
@@ -98,40 +99,45 @@ export const createUserProject = async (req: Request, res: Response) => {
     // Enhance prompt (with retry)
     const promptEnchanceResponse = await callWithRetry(() =>
       openai.chat.completions.create({
-        model: "deepseek/deepseek-chat-v3-0324",
+        model: "gemini-3-flash-preview",
         messages: [
-          {
-            role: "system",
-        content: `
-You are an expert frontend developer.
+         {
+  role: "system",
+  content: `Act as a Lead Product Designer and Senior Frontend Engineer. Your goal is to transform a raw website modification request into a comprehensive, implementation-ready technical blueprint.
 
-Your task is to transform the user's request into a clear, precise, and implementation-ready instruction.
+1. Architectural Framework & Layout:
 
-CRITICAL RULES:
+Visual Hierarchy: Reconstruct the layout using a strict 8px spacing system. Apply a clear focal point using scale, weight, and negative space.
 
-- Return ONLY the enhanced prompt
-- Do NOT include explanations, comments, or extra text
-- Keep the output concise (maximum 2 paragraphs)
+Modern Structures: Where appropriate, utilize modern layouts like Bento-grid structures or high-end Glassmorphism (backdrop-blur, subtle borders, and low-opacity fills).
 
-ENHANCEMENT RULES:
+Grid & Flex: Define precise CSS Grid (e.g., 12-column) or Flexbox behaviors for every section (Navbar, Hero, Cards, Footer).
 
-- Clearly identify which sections or components need to be modified or created
-- Specify exact visual changes (colors, spacing, typography, layout, alignment)
-- Mention interaction or behavior changes if relevant (hover, animations, transitions)
-- Keep instructions technical, direct, and actionable
+2. Design Tokens & Typography:
 
-RESTRICTIONS:
+Typography: Establish a responsive type scale. Specify font-weights, tracking (letter-spacing), and leading (line-height) for optimal readability.
 
-- Do NOT redesign the entire website unless explicitly requested
-- Do NOT add unnecessary features or sections
-- Focus only on what the user asked
+Color & Contrast: Use a cohesive color palette that ensures WCAG AA accessibility. Define states for interactive elements (Hover, Active, Focus).
 
-FINAL OUTPUT:
+Refined Details: Specify border-radius values, soft elevation (box-shadows), and 0.5px border-strokes for a premium feel.
 
-- Only the improved prompt
-- No extra text
-`
-          },
+3. Content & UX Writing:
+
+Meaningful Copy: Replace all placeholder text with high-conversion, contextually relevant microcopy. Ensure the tone is consistent and professional.
+
+4. Motion & Interactivity:
+
+State Transitions: Describe micro-interactions (e.g., button scale-down on click) and transition durations (e.g., 200ms cubic-bezier).
+
+Entrance Animations: Suggest Framer Motion or CSS keyframes for component entry (e.g., fade-in-up, staggered children).
+
+5. Responsive & Technical Logic:
+
+Breakpoints: Detail exactly how components collapse or stack across mobile, tablet, and ultra-wide screens.
+
+Implementation Checklist: Provide a step-by-step technical breakdown of which components to update first to maintain a global theme.
+Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3 paragraphs max).`,
+},
           {
             role: "user",
             content: initial_prompt,
@@ -163,55 +169,44 @@ FINAL OUTPUT:
     // Generate code (with retry)
     const codeGenerationResponse = await callWithRetry(() =>
       openai.chat.completions.create({
-        model: "deepseek/deepseek-chat-v3-0324",
+        model: "gemini-3-flash-preview",
         messages: [
           {
-            role: "system",
-          content: `
-You are an expert frontend developer.
+  role: "system",
+  content: `You are an elite Frontend Architect and UI/UX Designer. Your task is to generate high-end, production-ready HTML websites with a focus on sophisticated color theory and modern aesthetics.
 
-Your task is to generate a complete HTML website based on the user request.
+### CRITICAL OUTPUT PROTOCOL
+- Return ONLY the complete HTML code.
+- DO NOT use markdown formatting (NO \`\`\`html blocks).
+- DO NOT include explanations, comments, or introductory text.
+- Output must be a full, standalone HTML document starting with <!DOCTYPE html> and ending with </html>.
 
-CRITICAL RULES:
+### COLOR & DESIGN SYSTEM (ELITE STANDARD)
+- PALETTE SELECTION: Automatically choose a cohesive, professional color palette based on the context, purpose, and industry of the website.
+- CONSISTENCY: Use a single unified color system throughout the entire UI. Avoid random or inconsistent color usage.
+- VISUAL HIERARCHY: Use a dominant base tone for most of the layout and a minimal number of supporting accent tones for emphasis and interaction elements.
+- CONTRAST: Ensure strong readability and accessibility with clear contrast between text, backgrounds, and interactive elements.
+- MODERN UI: Maintain a clean, premium look using balanced tones, subtle depth, and polished visual layering.
 
-- Return ONLY the complete HTML code
-- Do NOT include explanations, comments, or extra text
-- Do NOT use markdown (no \`\`\`html)
-- Output must always be a full standalone HTML document
-
-INPUT:
-"${enhancedPrompt}"
-
-STRUCTURE RULES:
-
-- Use semantic HTML: <header>, <main>, <section>, <footer>
-- Keep structure clean and minimal
-- Do NOT add unnecessary sections unless clearly required
-
-STYLING RULES:
-
-- Use Tailwind CSS via CDN
-- Include this EXACT script inside <head>:
+### STYLING & STRUCTURE
+- FRAMEWORK: You MUST include this EXACT script inside the <head>:
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-- Use only Tailwind utility classes
-- Do NOT add custom CSS
+- Use ONLY Tailwind utility classes. No custom CSS blocks.
+- STRUCTURE: Use semantic HTML5 (<header>, <main>, <section>, <footer>) with mobile-first responsive design.
 
-RESPONSIVENESS:
+### UI QUALITY RULES
+- Maintain consistent spacing, alignment, and layout rhythm.
+- Use clear typography hierarchy and balanced visual weight.
+- Apply modern UI patterns such as soft shadows, smooth spacing, and refined component structure.
+- Ensure the design feels premium, minimal, and production-ready.
 
-- Ensure mobile-first responsive layout
-- Use Tailwind breakpoints (sm, md, lg, xl) only where necessary
+### INTERACTIVITY & ASSETS
+- JAVASCRIPT: Place all logic (e.g., smooth scroll, mobile menus, or intersection observers) inside a <script> tag immediately before the closing </body>.
+- IMAGES: Use descriptive, high-resolution Unsplash URLs (e.g., https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&q=80).
 
-JAVASCRIPT RULES:
-
-- Include all JavaScript inside <script> before </body>
-- Only add minimal required interactivity (e.g., menu toggle)
-
-FINAL OUTPUT:
-
-- Pure HTML code only
-- No extra text
-`
-          },
+### FINAL DIRECTIVE
+Your output must be 100% valid code. Any conversational filler or formatting outside the HTML tags is strictly forbidden.`,
+},
           {
             role: "user",
             content: enhancedPrompt || "",
@@ -293,164 +288,6 @@ FINAL OUTPUT:
     }
   }
 };
-
-// export const createUserProject = async (req: Request, res: Response) => {
-//   const userId = req.userId;
-//   try {
-//     const { initial_prompt } = req.body;
-
-//     if (!userId) {
-//       return res.status(400).json({ message: "User ID not found in request" });
-//     }
-
-//     const user = await prisma.user.findUnique({ where: { id: userId } });
-
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     if (user.credits < 5) {
-//       return res.status(400).json({ message: "Not enough credits" });
-//     }
-
-//     const project = await prisma.websiteProject.create({
-//       data: {
-//         name:
-//           initial_prompt.length > 50
-//             ? initial_prompt.substring(0, 47) + "..."
-//             : initial_prompt,
-//         initial_prompt,
-//         userId,
-//       },
-//     });
-
-//     await prisma.user.update({
-//       where: { id: userId },
-//       data: { totalCreation: { increment: 1 } },
-//     });
-
-//     await prisma.conversation.create({
-//       data: {
-//         role: "user",
-//         content: initial_prompt,
-//         projectId: project.id,
-//       },
-//     });
-
-//     await prisma.user.update({
-//       where: { id: userId },
-//       data: { credits: { decrement: 5 } },
-//     });
-
-//     // ✅ Send response FIRST, then run background work
-//     res.json({ projectId: project.id });
-
-//     // ✅ Everything below runs in background — errors won't crash the response
-//     runBackgroundGeneration(project.id, initial_prompt, userId).catch((err) => {
-//       console.error("Background generation failed:", err);
-//     });
-
-//   } catch (error: any) {
-//     console.error("Error creating project:", error);
-
-//     // Only refund if userId exists and credits were already deducted
-//     if (userId) {
-//       await prisma.user
-//         .update({
-//           where: { id: userId },
-//           data: { credits: { increment: 5 } },
-//         })
-//         .catch(console.error);
-//     }
-
-//     // ✅ Guard: only send error if response hasn't been sent yet
-//     if (!res.headersSent) {
-//       res.status(500).json({ message: "Internal Server Error" });
-//     }
-//   }
-// };
-
-// // ✅ Separated background function — clean and isolated
-// async function runBackgroundGeneration(
-//   projectId: string,
-//   initial_prompt: string,
-//   userId: string
-// ) {
-//   // Enhance prompt
-//   const promptEnhanceResponse = await openai.chat.completions.create({
-//      model: "deepseek/deepseek-chat-v3-0324",
-//     messages: [
-//       {
-//         role: "system",
-//         content: `You are a master UI/UX Architect...`, // your existing system prompt
-//       },
-//       { role: "user", content: initial_prompt },
-//     ],
-//   });
-
-//   const enhancedPrompt = promptEnhanceResponse.choices[0].message.content;
-
-//   await prisma.conversation.create({
-//     data: {
-//       role: "assistant",
-//       content: `Enhanced Prompt: ${enhancedPrompt}`,
-//       projectId,
-//     },
-//   });
-
-//   await prisma.conversation.create({
-//     data: {
-//       role: "assistant",
-//       content: `now generating your website...`,
-//       projectId,
-//     },
-//   });
-
-//   // Generate code
-//   const codeGenerationResponse = await openai.chat.completions.create({
-//      model: "deepseek/deepseek-chat-v3-0324",
-//     messages: [
-//       {
-//         role: "system",
-//         content: `You are an expert frontend developer...`, // your existing system prompt
-//       },
-//       { role: "user", content: enhancedPrompt || "" },
-//     ],
-//   });
-
-//   const rawCode = codeGenerationResponse.choices[0].message.content || "";
-//   const cleanCode = rawCode
-//     .replace(/```[a-z]*\n/g, "")
-//     .replace(/```/g, "")
-//     .trim();
-
-//   const version = await prisma.version.create({
-//     data: {
-//       code: cleanCode,
-//       description: "Initial version",
-//       projectId,
-//     },
-//   });
-
-//   await prisma.conversation.create({
-//     data: {
-//       role: "assistant",
-//       content: `Your website is ready! Version ID: ${version.id}`,
-//       projectId,
-//     },
-//   });
-
-//   await prisma.websiteProject.update({
-//     where: { id: projectId },
-//     data: {
-//       current_code: cleanCode,
-//       current_version_index: version.id,
-//     },
-//   });
-// }
-
-// controller to get a projects of single  user projects
-
 
 
 

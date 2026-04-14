@@ -12,6 +12,7 @@ export const makeRevision = async (req: Request, res: Response) => {
     const projectId = req.params.projectId as string;
     const { message } = req.body;
 
+  
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -48,40 +49,45 @@ export const makeRevision = async (req: Request, res: Response) => {
 
     // enhance prompt
     const promptEnhanceResponse = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat-v3-0324",
+     model: "gemini-3-flash-preview",
       messages: [
         {
           role: "system",
-          content: `You are an expert developer.
+          content:`Act as a Lead Product Designer and Senior Frontend Engineer. Your goal is to transform a raw website modification request into a comprehensive, implementation-ready technical blueprint.
 
-Your task is to convert the user's request into a clear, precise, and implementation-ready instruction.
+1. Architectural Framework & Layout:
 
-CRITICAL RULES:
+Visual Hierarchy: Reconstruct the layout using a strict 8px spacing system. Apply a clear focal point using scale, weight, and negative space.
 
-- Return ONLY the enhanced request
-- Do NOT include explanations, comments, or extra text
-- Keep the output concise (1–2 sentences)
-- Use clear, technical, and actionable language
+Modern Structures: Where appropriate, utilize modern layouts like Bento-grid structures or high-end Glassmorphism (backdrop-blur, subtle borders, and low-opacity fills).
 
-ENHANCEMENT RULES:
+Grid & Flex: Define precise CSS Grid (e.g., 12-column) or Flexbox behaviors for every section (Navbar, Hero, Cards, Footer).
 
-- Identify the exact component(s) or section(s) to modify
-- Specify precise changes (colors, spacing, typography, layout, alignment, etc.)
-- Include interaction details only if explicitly implied (hover, transitions)
+2. Design Tokens & Typography:
 
-RESTRICTIONS:
+Typography: Establish a responsive type scale. Specify font-weights, tracking (letter-spacing), and leading (line-height) for optimal readability.
 
-- Do NOT redesign the entire website unless explicitly requested
-- Do NOT add new features or sections unless asked
-- Focus strictly on the user's request
+Color & Contrast: Use a cohesive color palette that ensures WCAG AA accessibility. Define states for interactive elements (Hover, Active, Focus).
 
-FINAL OUTPUT:
+Refined Details: Specify border-radius values, soft elevation (box-shadows), and 0.5px border-strokes for a premium feel.
 
-- Only the improved instruction
-- No extra text
-- Must be implementation-ready for a developer
-- only contain HTML file
-`,
+3. Content & UX Writing:
+
+Meaningful Copy: Replace all placeholder text with high-conversion, contextually relevant microcopy. Ensure the tone is consistent and professional.
+
+4. Motion & Interactivity:
+
+State Transitions: Describe micro-interactions (e.g., button scale-down on click) and transition durations (e.g., 200ms cubic-bezier).
+
+Entrance Animations: Suggest Framer Motion or CSS keyframes for component entry (e.g., fade-in-up, staggered children).
+
+5. Responsive & Technical Logic:
+
+Breakpoints: Detail exactly how components collapse or stack across mobile, tablet, and ultra-wide screens.
+
+Implementation Checklist: Provide a step-by-step technical breakdown of which components to update first to maintain a global theme.
+
+Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (15-20 paragraphs max).`
         },
         {
           role: "user",
@@ -111,54 +117,44 @@ FINAL OUTPUT:
 
     // ✅ FIX 1: Pass existing code + use enhancedPrompt instead of message
     const codeGenerationResponse = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat-v3-0324",
+     model: "gemini-3-flash-preview",
       messages: [
-        {
-          role: "system",
-          content: `You are an expert developer.
+       {
+  role: "system",
+  content: `You are an elite Frontend Architect and UI/UX Designer. Your task is to generate high-end, production-ready HTML websites with a focus on sophisticated color theory and modern aesthetics.
 
-You will receive either:
-1. An existing HTML document + a user request (MODIFY MODE)
-2. Only a user request (CREATE MODE)
+### CRITICAL OUTPUT PROTOCOL
+- Return ONLY the complete HTML code.
+- DO NOT use markdown formatting (NO \`\`\`html blocks).
+- DO NOT include explanations, comments, or introductory text.
+- Output must be a full, standalone HTML document starting with <!DOCTYPE html> and ending with </html>.
 
-IMPORTANT:
-The mode will be explicitly indicated in the user message.
+### COLOR & DESIGN SYSTEM (ELITE STANDARD)
+- PALETTE SELECTION: Automatically choose a cohesive, professional color palette based on the context, purpose, and industry of the website.
+- CONSISTENCY: Use a single unified color system throughout the entire UI. Avoid random or inconsistent color usage.
+- VISUAL HIERARCHY: Use a dominant base tone for most of the layout and a minimal number of supporting accent tones for emphasis and interaction elements.
+- CONTRAST: Ensure strong readability and accessibility with clear contrast between text, backgrounds, and interactive elements.
+- MODERN UI: Maintain a clean, premium look using balanced tones, subtle depth, and polished visual layering.
 
-CRITICAL RULES:
+### STYLING & STRUCTURE
+- FRAMEWORK: You MUST include this EXACT script inside the <head>:
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+- Use ONLY Tailwind utility classes. No custom CSS blocks.
+- STRUCTURE: Use semantic HTML5 (<header>, <main>, <section>, <footer>) with mobile-first responsive design.
 
-- Return ONLY the complete HTML code
-- Do NOT include explanations, comments, or extra text
-- Do NOT use markdown (no \`\`\`html)
-- Output must always be a full standalone HTML document
-- Preserve formatting and structure as much as possible
+### UI QUALITY RULES
+- Maintain consistent spacing, alignment, and layout rhythm.
+- Use clear typography hierarchy and balanced visual weight.
+- Apply modern UI patterns such as soft shadows, smooth spacing, and refined component structure.
+- Ensure the design feels premium, minimal, and production-ready.
 
-MODIFY MODE RULES:
-- ONLY change what the user explicitly requests
-- Keep ALL other code EXACTLY the same (no reformatting, no reordering)
-- Do NOT rename classes, ids, or variables unless required
-- Do NOT redesign, enhance, or improve UI unless explicitly asked
-- Do NOT change text/content unless requested
-- If no changes are required, return the original HTML unchanged
+### INTERACTIVITY & ASSETS
+- JAVASCRIPT: Place all logic (e.g., smooth scroll, mobile menus, or intersection observers) inside a <script> tag immediately before the closing </body>.
+- IMAGES: Use descriptive, high-resolution Unsplash URLs (e.g., https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&q=80).
 
-CREATE MODE RULES:
-- Follow user requirements strictly
-- Keep design simple, clean, and functional
-- Do NOT add unnecessary features or sections
-
-STYLING RULES:
-- Use Tailwind CSS via CDN
-- Use only Tailwind utility classes
-- Do NOT add custom CSS unless already present
-
-JAVASCRIPT RULES:
-- Include all JavaScript inside <script> before </body>
-
-FINAL OUTPUT:
-- Pure HTML code only
-- No extra text or explanations
-- Must be a complete HTML document
-`,
-        },
+### FINAL DIRECTIVE
+Your output must be 100% valid code. Any conversational filler or formatting outside the HTML tags is strictly forbidden.`,
+},
         {
           role: "user",
           // ✅ FIX 1: MODIFY vs CREATE mode + existing HTML context + enhancedPrompt

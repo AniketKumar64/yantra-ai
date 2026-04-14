@@ -34,6 +34,7 @@ const Leftside = ({
     try {
       const { data } = await api.get(`/me/project/${project.id}`);
       setProject(data.project);
+      console.log("Project updated:", data.project);
     } catch (error: any) {
       toast.error("Failed to fetch project updates. Please refresh.");
       console.error("Error fetching project:", error);
@@ -130,7 +131,7 @@ const handleRevisions = async (e: React.FormEvent) => {
   setInput(""); // Clear input immediately for better UX
 };
 return (
-    <aside className={`w-full lg:w-80 border-r pt-0 md:pt-20 border-[var(--border)] bg-[var(--card)]/30 p-4 flex flex-col gap-4 overflow-hidden ${isMenuOpen ? "mx-sm:w-0 overflow-hidden" : "w-full"} `} >
+    <aside className={`w-full  border-r  border-[var(--border)] bg-[var(--card)]/30 p-4 flex flex-col gap-4 overflow-hidden ${isMenuOpen ? "mx-sm:w-0 overflow-hidden" : "w-full"} `} >
 
       {/* 🔹 STATUS CARD */}
       <div className="p-4 rounded-2xl bg-[var(--card)] border border-[var(--border)] shadow-sm">
@@ -167,14 +168,14 @@ return (
               return (
                 <div key={msg.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[85%] px-3 py-2 rounded-xl text-xs leading-relaxed shadow-sm
+                    className={`max-w-[85%] px-3 py-2 overflow-hidden rounded-xl text-xs leading-relaxed shadow-sm
                     ${isUser
                         ? "bg-[var(--primary)] text-white"
                         : "bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)]"
                       }`}
                   >
                     {!isUser && (
-                      <div className="flex items-center gap-1 mb-1 text-[10px] text-[var(--muted-foreground)] uppercase tracking-widest font-mono">
+                      <div className="flex overflow-hidden items-center gap-1 mb-1 text-[10px] text-[var(--muted-foreground)] uppercase tracking-widest font-mono">
                         <Sparkles className="text-emerald-500 animate-pulse" size={10} />
                         YantraAi.
                       </div>
