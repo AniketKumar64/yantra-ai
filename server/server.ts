@@ -14,14 +14,13 @@ import { stripeWebhook } from "./Controllers/stripeWebhook.js";
 const app = express();
 const port = process.env.PORT ;
 
-app.use(
-  cors({
-    origin: "https://yantra-ai-527j.vercel.app",
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: process.env.TRUSTED_ORIGINS?.split(",") || [],
+  credentials: true,
+};
+
 // ✅ CORS first
-// app.use(cors(corsOptions));
+app.use(cors(corsOptions));
 app.post('/api/stripe',express.raw({type: 'application/json'}) , stripeWebhook)
 
 // ✅ Body parser once
