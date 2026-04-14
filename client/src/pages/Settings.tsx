@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, ShieldCheck, AlertTriangle, Layers } from "lucide-react";
+import { User, ShieldCheck, AlertTriangle } from "lucide-react";
 import { AccountSettingsCards, DeleteAccountCard, ChangePasswordCard } from "@daveyplate/better-auth-ui";
 import { authClient } from "@/lib/auth-client";
 
@@ -17,7 +17,7 @@ const NAV_ITEMS = [
   { id: "danger", icon: AlertTriangle, label: "Danger Zone", sub: "Destructive actions", tag: "03", danger: true },
 ];
 
-const NavItem = ({ item, active, onClick, index }) => {
+const NavItem = ({ item, active, onClick, index }: { item: typeof NAV_ITEMS[number]; active: boolean; onClick: () => void; index: number }) => {
   const Icon = item.icon;
   // Dynamic coloring based on danger status and theme variables
   const colorClass = item.danger ? "text-red-500" : "text-[var(--primary)]";
@@ -53,7 +53,7 @@ const NavItem = ({ item, active, onClick, index }) => {
   );
 };
 
-const SectionHeader = ({ tag, title, italic, desc, danger }) => (
+const SectionHeader = ({ tag, title, italic, desc, danger }: { tag: string; title: string; italic: string; desc: string; danger?: boolean }) => (
   <div className="mb-10">
     <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase mb-4 
       ${danger ? "bg-red-500/10 text-red-400" : "bg-[var(--primary)]/10 text-[var(--primary)]"}`}>
@@ -84,9 +84,9 @@ const SettingsUI = () => {
         <DeleteAccountCard />
       </>
     )}
-  };
+  } as const;
 
-  const current = sections[activeTab];
+  const current = sections[activeTab as keyof typeof sections];
 
   return (
     <div className="min-h-screen bg-[var(--background)] font-body text-[var(--foreground)] selection:bg-[var(--primary)]/30">

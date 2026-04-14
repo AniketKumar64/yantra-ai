@@ -1,7 +1,6 @@
 import type { Project } from '../types/index'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { dummyProjects } from '../assets/assets'
 import { Link, useNavigate } from 'react-router-dom'
 import { FolderOpen, Code, Plus, Trash2, ExternalLink, Zap, TerminalSquare } from 'lucide-react'
 import AnimatedGridBackground from '../components/Common/AnimatedGridBackground'

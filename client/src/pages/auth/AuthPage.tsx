@@ -1,12 +1,10 @@
 import { useParams } from "react-router-dom";
 import { AuthView } from "@daveyplate/better-auth-ui";
-import { Layers, ShieldCheck, Sparkles } from "lucide-react";
+import {  ShieldCheck, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import { useTheme } from "../../Context/ThemeContext";
 
 export default function AuthPage() {
   const { pathname } = useParams();
-  const { isDark } = useTheme();
 
   return (
     <main className="relative min-h-screen flex overflow-hidden bg-background">

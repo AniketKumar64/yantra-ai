@@ -1,4 +1,4 @@
-import  { createContext, useContext, useEffect, useState } from "react";
+import  { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 interface ThemeContextType {
   isDark: boolean;
@@ -10,7 +10,7 @@ const ThemeContext = createContext<ThemeContextType>({
   toggleTheme: () => {},
 });
 
-export const ThemeProvider = ({ children }) => {
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [isDark, setIsDark] = useState(() => {
     return localStorage.getItem("theme") === "dark" || 
            (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches);

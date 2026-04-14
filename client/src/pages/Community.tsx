@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
-import { dummyProjects } from '../assets/assets'
 import { Link, useNavigate } from 'react-router-dom'
 import type { Project } from '@/types/index'
 import { Code, Globe, User, ExternalLink, Activity } from 'lucide-react'

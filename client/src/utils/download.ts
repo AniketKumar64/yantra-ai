@@ -10,12 +10,6 @@ interface DownloadOptions {
   projectName?: string;
 }
 
-interface ReactProject {
-  code: string;
-  projectName?: string;
-  styles?: string;
-}
-
 // ================= JSX DOWNLOAD =================
 
 export const downloadAsJSX = (

@@ -1,9 +1,8 @@
-import { dummyProjects } from '@/assets/assets';
 import ProjectPreview from '@/components/Projects/ProjectPreview';
 import LoaderStep from '@/components/Projects/LoaderStep'; 
 import type { Project } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import api from '@/Context/axios';
 

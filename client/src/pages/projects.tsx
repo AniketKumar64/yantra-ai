@@ -1,5 +1,5 @@
 import type { Project } from '@/types/index'
-import { use, useEffect, useRef, useState } from 'react'
+import {  useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Sparkles, Smartphone, Tablet, Monitor, Save, Download, MoreVertical, RefreshCw, Code, Eye, Trash2, Copy, ExternalLink, X, MessageSquare } from 'lucide-react'
@@ -281,10 +281,11 @@ useEffect(() => {
     {/* SAVE BUTTON */}
     <button 
       onClick={handleSave}
-      className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border)] bg-[var(--card)] hover:bg-[var(--foreground)]/5 transition-all"
+      disabled={isSaving}
+      className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border)] bg-[var(--card)] hover:bg-[var(--foreground)]/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      <Save size={14} />
-      <span className="hidden md:inline">Save</span>
+      <Save size={isSaving ? 14 : 14} className={isSaving ? "animate-spin" : ""} />
+      <span className="hidden md:inline">{isSaving ? "Saving..." : "Save"}</span>
     </button>
 
     {/* PUBLISH / UNPUBLISH */}

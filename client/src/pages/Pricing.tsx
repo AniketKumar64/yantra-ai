@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Zap, ArrowRight, Sparkles, Building2, Rocket } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
@@ -61,8 +60,7 @@ function FeatureRow({ text }: { text: string }) {
 
 const Pricing = () => {
   const { data: session } = authClient.useSession();
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [plans] = React.useState<plan[]>(appPlans);
+  // const [plans] = React.useState<plan[]>(appPlans);
 
   // Purchase Handler
   const handlePurchase = async (planId: string) => {

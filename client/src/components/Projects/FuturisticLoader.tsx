@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Monitor, Code2, CheckCircle2, Flame, Terminal, Cpu } from "lucide-react";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Zap, Monitor, Code2, Flame, Terminal, Cpu } from "lucide-react";
 
 const BUILD_STEPS = [
   "> initializing_thermal_core...",
