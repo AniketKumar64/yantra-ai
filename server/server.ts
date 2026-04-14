@@ -9,6 +9,7 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/Auth.js";
 import userRouter from "./routes/userRoutes.js";
 import ProjectRouter from "./routes/ProjectRoutes.js";
+import { stripeWebhook } from "./Controllers/stripeWebhook.js";
 
 const app = express();
 const port = process.env.PORT ;
@@ -20,6 +21,7 @@ const corsOptions = {
 
 // ✅ CORS first
 app.use(cors(corsOptions));
+app.post('/api/stripe',express.raw({type: 'application/json'}) , stripeWebhook)
 
 // ✅ Body parser once
 app.use(express.json({ limit: '50mb' }));

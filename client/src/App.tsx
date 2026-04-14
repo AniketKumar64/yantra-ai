@@ -13,6 +13,7 @@ import { ThemeProvider } from "./Context/ThemeContext";
 import AnimatedGridBackground from "./components/Common/AnimatedGridBackground";
 import FooterSection from "./components/Home/FooterSection";
 import Projects from "./pages/projects";
+import LoaderStep from "./components/Projects/LoaderStep";
 
 
 const App = () => {
@@ -48,6 +49,7 @@ const hideNavbar =
           <Route path="/view/:projectId" element={<View />} />
           <Route path="/auth/:pathname" element={<AuthPage />} />
           <Route path="/account/settings" element={<Settings />} />
+          <Route path="/loading" element={<LoaderStep/>}/>
         </Routes>
         {!hideFooter && <FooterSection />}
       </ThemeProvider>
