@@ -16,11 +16,10 @@ const port = process.env.PORT ;
 
 app.use(
   cors({
-    origin: "*",
+    origin: "https://yantra-ai-527j.vercel.app",
     credentials: true,
   })
 );
-
 // ✅ CORS first
 // app.use(cors(corsOptions));
 app.post('/api/stripe',express.raw({type: 'application/json'}) , stripeWebhook)
