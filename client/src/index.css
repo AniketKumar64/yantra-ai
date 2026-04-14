@@ -67,7 +67,7 @@
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.25 0.01 60);
 
-    --primary: oklch(0.35 0.08 160);      /* Emerald (#065F46) */
+    --primary: oklch(53.165% 0.12343 158.208);      /* Emerald (#065F46) */
     --primary-foreground: oklch(0.98 0 0);
 
     --secondary: oklch(0.94 0.01 80);     /* Stone (#F2F0EB) */
@@ -182,4 +182,20 @@
 
 button[data-slot="button"] {
     @apply transition-transform active:scale-95 ;
+}
+.skeleton {
+  background: linear-gradient(90deg, #181c28 0%, #232840 45%, #181c28 100%);
+  background-size: 600px 100%;
+  animation: shimmer 2s infinite linear;
+  border-radius: 5px;
+}
+.skeleton-dark {
+  background: linear-gradient(90deg, #111420 0%, #1a1f32 45%, #111420 100%);
+  background-size: 600px 100%;
+  animation: shimmer 2.3s infinite linear;
+  border-radius: 5px;
+}
+@keyframes shimmer {
+  0% { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
 }

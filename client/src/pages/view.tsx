@@ -5,6 +5,7 @@ import type { Project } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
+import api from '@/Context/axios';
 
 const View = () => {
   const { projectId } = useParams();
@@ -12,16 +13,15 @@ const View = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchCode = async () => {
-    setLoading(true);
-    const foundCode = dummyProjects.find(p => p.id === projectId)?.current_code;
-    
-    // Simulating the architectural build time
-    setTimeout(() => {
-      if (foundCode) {
-        setCode(foundCode);
-        setLoading(false);
-      }
-    }, 4000); // Slightly longer to let the LoaderStep show progress
+    try{
+      const { data } = await api.get(`/api/project/published/${projectId}`);
+      setCode(data.code);
+      setLoading(false);
+    }
+    catch(error) {
+      console.error("Error fetching code:", error);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {

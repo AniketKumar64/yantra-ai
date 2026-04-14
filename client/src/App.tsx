@@ -21,13 +21,16 @@ const App = () => {
 const hideNavbar =
   (pathname.startsWith("/projects") && pathname !== "/projects") ||
   pathname.startsWith("/view/") ||
-  pathname.startsWith("/preview/");
+  pathname.startsWith("/preview/")
+  || pathname.startsWith("/project/");
 
   const hideFooter =
     (pathname.startsWith("/projects") && pathname !== "/projects") ||
     pathname.startsWith("/view/") ||
     pathname.startsWith("/preview") ||
-    pathname.startsWith("/auth");
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/account/settings")||
+    pathname.startsWith("/project/");
   return (
     <div>
       <ThemeProvider>
@@ -39,8 +42,7 @@ const hideNavbar =
           <Route path="/community" element={<Community />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/projects" element={<MyProjects />} />
-          <Route path="/projects/:projectId" element={<Projects />} />
-
+          <Route path="/project/:projectId" element={<Projects />} />
           <Route path="/preview/:projectId" element={<Preview />} />
           <Route path="/preview/:projectId/:versionId" element={<Preview />} />
           <Route path="/view/:projectId" element={<View />} />

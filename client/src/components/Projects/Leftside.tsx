@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import type { Message, Project } from "@/types";
 import { Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import api from "@/Context/axios";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 type Props = {
   isMenuOpen: boolean;
@@ -10,7 +13,6 @@ type Props = {
   isGenerating: boolean;
   setisGenerating: (generating: boolean) => void;
 };
-
 const Leftside = ({
   isMenuOpen,
   setProject,
@@ -28,50 +30,107 @@ const Leftside = ({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [project.conversation, project.versions, isGenerating]);
 
-
-//   rollback to version
-    const handleRollback = (versionId: string) => {
-
-
-        
+  const fetchProject = async () => {
+    try {
+      const { data } = await api.get(`/me/project/${project.id}`);
+      setProject(data.project);
+    } catch (error: any) {
+      toast.error("Failed to fetch project updates. Please refresh.");
+      console.error("Error fetching project:", error);
     }
-    const handleRevisions = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setisGenerating(true);
-        setTimeout(() => {
-            setisGenerating(false);
-
-        },1000)
-
-
-        }
-  // 🔹 Send Message
-  const handleSend = () => {
-    if (!input.trim()) return;
-
-    const newMessage: Message = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: input,
-      timestamp: new Date().toISOString(),
-    };
-
-    setProject({
-      ...project,
-      conversation: [...project.conversation, newMessage],
-    });
-
-    setInput("");
-    setisGenerating(true);
-
-    // simulate AI response
-    setTimeout(() => {
-      setisGenerating(false);
-    }, 1500);
   };
 
-  return (
-    <aside className={`w-full lg:w-80 border-r border-[var(--border)] bg-[var(--card)]/30 p-4 flex flex-col gap-4 overflow-hidden ${isMenuOpen ? "mx-sm:w-0 overflow-hidden" : "w-full"} `} >
+  const handleRollback = async (versionId: string) => {
+    try {
+      const confirm = window.confirm(
+        "Are you sure you want to switch back to this version? This will discard any unsaved changes."
+      );
+      if (!confirm) return;
+
+      setisGenerating(true);
+
+      await api.get(`/api/project/rollback/${project.id}/${versionId}`);
+
+      const { data } = await api.get(`/me/project/${project.id}`);
+
+      toast.success("Switched to selected version successfully!");
+      setProject(data.project);
+    } catch (err) {
+      toast.error("Failed to switch versions. Please try again.");
+      console.error("Rollback error:", err);
+    } finally {
+      setisGenerating(false);
+    }
+  };
+
+// const handleRevisions = async (e: React.FormEvent) => {
+//   e.preventDefault();
+
+//   let interval: ReturnType<typeof setInterval> | undefined;
+
+//   try {
+//     if (!input.trim()) return;
+
+//     setisGenerating(true);
+
+//     interval = setInterval(() => {
+//       fetchProject();
+//     }, 2000);
+
+//     await api.post(`/api/project/revision/${project.id}`, {
+//       prompt: input, // ✅ FIXED
+//     });
+
+//     toast.success("Revision applied successfully!");
+//     setInput("");
+
+//     await fetchProject();
+//   } catch (err: any) {
+//     console.error("Revision error:", err.response?.data || err.message);
+//     console.error("Full error object:", err);
+//     toast.error(err.response?.data?.error || "Failed to apply revision.");
+//   } finally {
+//     if (interval) clearInterval(interval); // ✅ safe cleanup
+//     setisGenerating(false);
+//   }
+// };
+
+const handleRevisions = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!input.trim() || isGenerating) return; // guard against concurrent calls
+
+  let interval: ReturnType<typeof setInterval> | undefined;
+
+  try {
+    setisGenerating(true);
+
+    // Start polling only after confirming the request is in-flight
+    await api.post(`/api/project/revision/${project.id}`, { message: input });
+
+    // Poll for updates only after the POST succeeds
+    interval = setInterval(fetchProject, 2000);
+
+    toast.success("Revision applied successfully!");
+    setInput("");
+
+    await fetchProject(); // immediate refresh
+  } catch (err: any) {
+    console.error("Revision error:", err.response?.data ?? err.message);
+    toast.error(err.response?.data?.error ?? "Failed to apply revision.");
+  } finally {
+    clearInterval(interval); // safe even if undefined
+    setisGenerating(false);
+  }
+};
+  const handleSend = () => {
+  if (!input.trim()) return;
+  const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
+  handleRevisions(syntheticEvent);
+  setInput(""); // Clear input immediately for better UX
+};
+return (
+    <aside className={`w-full lg:w-80 border-r pt-0 md:pt-20 border-[var(--border)] bg-[var(--card)]/30 p-4 flex flex-col gap-4 overflow-hidden ${isMenuOpen ? "mx-sm:w-0 overflow-hidden" : "w-full"} `} >
 
       {/* 🔹 STATUS CARD */}
       <div className="p-4 rounded-2xl bg-[var(--card)] border border-[var(--border)] shadow-sm">
@@ -86,9 +145,9 @@ const Leftside = ({
           </span>
         </div>
 
-        <p className="text-xs text-[var(--muted-foreground)] leading-relaxed italic border-l-2 border-[var(--primary)]/30 pl-3">
-          "{project?.initial_prompt || "Defining the future of digital interfaces..."}"
-        </p>
+        {/* <p className="text-xs text-[var(--muted-foreground)] leading-relaxed italic border-l-2 border-[var(--primary)]/30 pl-3">
+          "{project?.initial_prompt.trim(50) || "Defining the future of digital interfaces..."}"
+        </p> */}
       </div>
 
       {/* 🔹 CHAT AREA */}
@@ -186,13 +245,45 @@ return (
             })}
 
         {/* 🔹 GENERATING */}
-        {isGenerating && (
-          <div className="flex items-center gap-2 text-[10px] text-[var(--muted-foreground)] font-mono animate-pulse">
-            <Sparkles size={12} />
-            Generating changes...
-          </div>
-        )}
-
+  {isGenerating && (
+  <div className="flex flex-col items-center justify-center gap-6 p-10">
+    <div className="flex items-end gap-3 h-12">
+      {[0, 1, 2].map((i) => (
+        <motion.div
+          key={i}
+          className="w-4 h-4 rounded-sm bg-primary"
+          initial={{ height: "1rem", opacity: 0.2 }}
+          animate={{ 
+            height: ["1rem", "3rem", "1rem"],
+            opacity: [0.2, 1, 0.2],
+            boxShadow: [
+              "0 0 0px var(--primary)",
+              "0 0 20px var(--primary)",
+              "0 0 0px var(--primary)"
+            ]
+          }}
+          transition={{
+            duration: 1,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.15,
+          }}
+        />
+      ))}
+    </div>
+    
+    <div className="flex flex-col items-center gap-1">
+      <motion.span 
+        className="text-xs font-mono uppercase tracking-[0.5em] text-primary font-bold"
+        animate={{ opacity: [0.4, 1, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        Processing_Data
+      </motion.span>
+      <div className="h-px w-24 bg-gradient-to-r from-transparent via-border to-transparent" />
+    </div>
+  </div>
+)}
         {/* 🔹 AUTO SCROLL TARGET */}
         <div ref={bottomRef} />
       </div>

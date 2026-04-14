@@ -5,24 +5,54 @@ import { dummyProjects } from '../assets/assets'
 import { Link, useNavigate } from 'react-router-dom'
 import { FolderOpen, Code, Plus, Trash2, ExternalLink, Zap, TerminalSquare } from 'lucide-react'
 import AnimatedGridBackground from '../components/Common/AnimatedGridBackground'
+import api from '@/Context/axios'
+import { toast } from 'sonner'
+import { authClient } from '@/lib/auth-client'
 
 const MyProjects = () => {
+  const {data: session , isPending} = authClient.useSession()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
   const fetchProjects = async () => {
-    setProjects(dummyProjects)
+   try{
+    const { data } = await api.get('/me/projects')
+    setProjects(data.projects)
     setLoading(false)
+    
+   }catch(error) {
+    console.error("Error fetching projects:", error)
+    toast.error("Failed to load projects. Please try again later.");
+    setLoading(false)
+   }
   }
 
   const deleteProject = async (projectId: string) => {
-    setProjects(projects.filter((p) => p.id !== projectId))
+    try{
+
+      const confirm = window.confirm("Are you sure you want to delete this project? This action cannot be undone.")
+      if(!confirm) return;
+      const { data } = await api.delete(`/api/project/${projectId}`)
+      toast.success(data.message || "Project deleted successfully")
+      fetchProjects();
+
+    }catch(error) {
+      console.error("Error deleting project:", error)
+      toast.error("Failed to delete project. Please try again later.")
+    }
   }
 
   useEffect(() => {
-    fetchProjects()
-  }, [])
+    if(!isPending && !session?.user) {
+      
+      navigate('/')
+      toast.error("You need to be logged in to view your projects.")
+    } else if(session?.user && !isPending) {
+      fetchProjects()
+    }
+    
+  }, [session?.user])
 
   return (
     <div className="relative min-h-screen py-24 px-4 md:px-16 lg:px-24 xl:px-32 bg-[var(--background)] overflow-hidden">
@@ -126,7 +156,7 @@ const MyProjects = () => {
           >
          {projects.map((project) => (
   <motion.div
-  onClick={()=>navigate(`/projects/${project.id}`)}
+  onClick={()=>navigate(`/project/${project.id}`)}
     key={project.id}
     initial="hidden"
     whileInView="visible"

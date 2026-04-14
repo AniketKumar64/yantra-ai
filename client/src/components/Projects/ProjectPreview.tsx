@@ -2,6 +2,7 @@ import { forwardRef, use, useEffect, useImperativeHandle, useRef, useState } fro
 import type { Project } from '@/types/index'
 import { iframeScript } from '@/assets/assets';
 import EditorPanel from './EditorPanel';
+import FuturisticLoader from './FuturisticLoader';
 
 
 interface projectPreviewprops {
@@ -142,33 +143,27 @@ const ProjectPreview = forwardRef<projectPreviewRef, projectPreviewprops>
         }, [])
 
         return (
-  <div className="relative h-screen w-full bg-[var(--background)] overflow-hidden">      {
-                    project.current_code ? (
-                        <>
-                            <iframe
-                                title="Project Preview"
-                                ref={iframeref}
-                                srcDoc={injectPreview(project.current_code)}
-                                className={`h-full max-sm:w-full ${resolution[device]} mx-auto transition-all duration-300 border-0`}
-                            />
-                            {showEditorpanel && selectedElement && (
-                                <EditorPanel
-                                    selectedElement={selectedElement}
-                                    onUpdate={handleUpdate}
-                                    onClose={handleClose}
-                                />
-                            )}
-                        </>
-                    ) : isGenerating && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-10">
-                            <div className="flex flex-col items-center justify-center gap-4">
-                                <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin" />
-                                <div className="text-white text-lg font-medium">Generating preview...</div>
-                            </div>
-                        </div>
-                    )
-                }
-            </div>
+ <div className="relative h-screen w-full  bg-[var(--background)] overflow-hidden">
+  {project.current_code ? (
+    <>
+      <iframe
+        title="Project Preview"
+        ref={iframeref}
+        srcDoc={injectPreview(project.current_code)}
+        className={`h-full max-sm:w-full ${resolution[device]} mx-auto transition-all duration-500 border-x border-zinc-800 shadow-2xl`}
+      />
+      {showEditorpanel && selectedElement && (
+        <EditorPanel
+          selectedElement={selectedElement}
+          onUpdate={handleUpdate}
+          onClose={handleClose}
+        />
+      )}
+    </>
+  ) : isGenerating && (
+   <FuturisticLoader/>
+  )}
+</div>
         )
     })
 

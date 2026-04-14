@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import type { Project } from '@/types/index'
 import { Code, Globe, User, ExternalLink, Activity } from 'lucide-react'
 import AnimatedGridBackground from '../components/Common/AnimatedGridBackground'
+import api from '@/Context/axios'
 
 const Community = () => {
   const [projects, setProjects] = useState<Project[]>([])
@@ -12,8 +13,17 @@ const Community = () => {
   const navigate = useNavigate()
   
   const fetchProjects = async () => {
-    setProjects(dummyProjects)
-    setLoading(false)
+    try{
+      const { data }= await api.get("/api/project/published");
+
+      setProjects(data.projects)
+      setLoading(false)
+
+    }
+    catch(error) {
+      console.error("Error fetching published projects:", error)
+      setLoading(false)
+    }
   }
   
   useEffect(() => {

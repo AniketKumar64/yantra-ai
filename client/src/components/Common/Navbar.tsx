@@ -1,16 +1,33 @@
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Layers, ArrowRight, Sun, Moon, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { UserButton } from "@daveyplate/better-auth-ui";
 import { useTheme } from "../../Context/ThemeContext";
+import api from "@/Context/axios";
+import { toast } from "sonner";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
   const { isDark, toggleTheme } = useTheme();
   const { scrollY } = useScroll();
+  const [credits, setCredits] = useState(0);
+
+
+const getCredits = async () => {
+  try {
+    const { data } = await api.get("/me/credits");
+
+    setCredits(data?.credits ?? 0);
+
+    console.log("Credits fetched successfully:", data);
+  } catch (error: any) {
+    toast.error(error?.response?.data?.message || "Failed to fetch credits");
+    console.error("Error fetching credits:", error);
+  }
+};
 
   const [open, setOpen] = useState(false);
 
@@ -46,6 +63,12 @@ const Navbar = () => {
     { name: "Pricing", path: "/pricing" },
   ];
 
+  useEffect(() => {
+    if (session?.user) {
+      getCredits();
+    }
+  }, [session?.user]);
+
   return (
     <div className="fixed top-0 left-0 right-0 z-[100] flex justify-center pointer-events-none">
       <motion.nav
@@ -68,7 +91,7 @@ const Navbar = () => {
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => navigate("/")}
         >
-          <div className="bg-emerald-800 dark:bg-[var(--primary)] p-2 rounded-md transition-all group-hover:scale-105 group-hover:shadow-[0_0_15px_var(--primary)]">
+          <div className="bg-[var(--primary)] dark:bg-[var(--primary)] p-2 rounded-md transition-all group-hover:scale-105 ">
             <Layers size={18} className="text-[var(--background)] dark:text-black" />
           </div>
           <span className="font-display text-2xl text-[var(--foreground)] tracking-tight hidden sm:block">
@@ -112,6 +135,15 @@ const Navbar = () => {
 
           {/* Divider */}
           <div className="h-6 w-px bg-[var(--border)]/50 mx-1 hidden md:block" />
+  <button  className="flex items-center gap-2 px-3 py-1 rounded-lg border border-[var(--border)] bg-transparent">
+                <span className="text-sm font-medium text-[var(--muted-foreground)]">
+                  Credits: <span className="font-bold text-[var(--foreground)]">
+                    {credits}
+                  </span>
+                </span>
+              </button>
+                        <div className="h-6 w-px bg-[var(--border)]/50 mx-1 hidden md:block" />
+
 
           {/* Auth / User */}
           {!session?.user ? (
@@ -126,6 +158,9 @@ const Navbar = () => {
             </button>
           ) : (
             <div className="relative">
+            
+
+
               {isDark && (
                 <div className="absolute inset-0 rounded-full bg-[var(--primary)]/20 blur-lg" />
               )}

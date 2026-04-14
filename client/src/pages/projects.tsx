@@ -1,22 +1,25 @@
 import type { Project } from '@/types/index'
-import { useEffect, useRef, useState } from 'react'
+import { use, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Sparkles, Smartphone, Tablet, Monitor, Save, Download, MoreVertical, RefreshCw, Code, Eye, Trash2, Copy, ExternalLink, X, MessageSquare } from 'lucide-react'
-import { dummyConversations, dummyProjects, dummyVersion } from '@/assets/assets'
 import Leftside from '@/components/Projects/Leftside'
-import RightSide from '@/components/Projects/RightSode'
 import ProjectPreview from '@/components/Projects/ProjectPreview'
 import type { projectPreviewRef } from '@/components/Projects/ProjectPreview'
 import { downloadCode } from '@/utils/download'
 import LoaderStep from '@/components/Projects/LoaderStep'
+import api from '@/Context/axios'
+import { toast } from 'sonner'
+import { authClient } from '@/lib/auth-client'
 
 const Projects = () => {
-  const { projectId } = useParams()
+const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate()
+  const { data: session , isPending  } = authClient.useSession();
 
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
 
   const [isGenerating, setIsGenerating] = useState(false)
   const [device, setDevice] = useState<'phone' | 'tablet' | 'desktop'>('desktop')
@@ -29,15 +32,31 @@ const Projects = () => {
 
   const [activeTab, setActiveTab] = useState<'preview' | 'code'>('preview')
 
-const fetchProject = async () => {
-  const project = dummyProjects.find(project => project.id === projectId)
-  setTimeout(() => {
-    if(project) {
-      setProject({...project, conversation: dummyConversations, versions: dummyVersion});
-      setLoading(false)
-      setIsGenerating(project.current_code ? false : true)
+  if (!projectId || projectId === "undefined") {
+  console.error("projectId is undefined or invalid");
+  useEffect(() => {
+    if (projectId === "undefined") {
+      navigate('/projects');
+      toast.error("Invalid project ID");
     }
-  },2000)
+  }, [projectId]);
+  return <LoaderStep />;
+}
+
+const fetchProject = async () => {
+ try{
+  const { data } = await api.get(`/me/project/${projectId}`);
+  setProject(data.project);
+  setIsGenerating(data.project.current_code ? false : true);
+  setLoading(false);
+
+ }
+  catch(error: any){
+    console.error("Error fetching project:", error);
+    toast.error(error?.response?.data?.message || "Failed to fetch project");
+    setLoading(false);
+    // navigate('/projects');
+  }
 }
 
 
@@ -48,13 +67,47 @@ const fetchProject = async () => {
 
 
 
-const handleSave = () => {
-  console.log("Saving project...")
+const handleSave = async () => {
+  if(!previewRef.current) {
+    toast.error("Preview not available");
+    return;
+  }
+  const code = previewRef.current.getCode();
+  if(!code) {
+    toast.error("No code to save");
+    return;
+  }
+  setIsSaving(true);
+  try{
+    const { data } = await api.put(`api/project/save/${projectId}`, { code });
+    toast.success(data.message || "Project saved successfully");
+  }
+  catch(error: any) {
+    console.error("Error saving project:", error);
+    toast.error(error?.response?.data?.message || "Failed to save project");
+  }finally {  
+    setIsSaving(false);
+
+
 }
 
-const handlePublish = () => {
-  console.log("Publishing project...")
 }
+
+
+const handlePublish = async () => {
+  try{
+
+    const { data } = await api.get(`me/publish-toggle/${projectId}`);
+    toast.success(data.message || "Project published successfully");
+    setProject(prev => prev ? { ...prev, isPublished: !prev.isPublished } : null);
+
+  }catch(error: any) {
+    console.error("Error publishing project:", error);
+    toast.error(error?.response?.data?.message || "Failed to publish project");
+  }
+  
+}
+
 
 const handleUnpublish = () => {
   console.log("Unpublishing project...")
@@ -100,13 +153,32 @@ const handleDelete = () => {
 }
 
 
-  useEffect(() => { fetchProject() }, [projectId])
 
-  const deviceWidths = {
-    phone: 'max-w-[375px]',
-    tablet: 'max-w-[768px]',
-    desktop: 'max-w-full',
+useEffect(() => {
+  if(session?.user && projectId !== "undefined") {
+    fetchProject();
+  }else if(!isPending && !session?.user) {
+        navigate("/");
+
+    toast.error("Please sign in to access projects");
   }
+}, [session?.user, projectId] )
+
+
+
+  useEffect(() => { 
+    if(project && !project.current_code) {
+      const intervalId = setInterval(fetchProject, 10000);
+      return () => clearInterval(intervalId);
+    }
+
+  }, [project])
+
+  if(loading) {
+    return <LoaderStep />
+  }
+
+
 
 
 

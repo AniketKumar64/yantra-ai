@@ -1,33 +1,43 @@
 import { dummyProjects } from '@/assets/assets';
 import ProjectPreview from '@/components/Projects/ProjectPreview';
 import LoaderStep from '@/components/Projects/LoaderStep'; 
-import type { Project } from '@/types';
+import type { Project, Version } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import  { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
+import api from '@/Context/axios';
+import { authClient } from '@/lib/auth-client';
 
 const Preview = () => {
+  const { data: session, isPending } = authClient.useSession();
   const { projectId, versionId } = useParams();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(true);
 
   const fetchCode = async () => {
-    setLoading(true);
-  
-    // Simulating the architectural build time
-    setTimeout(() => {
-        const foundCode = dummyProjects.find(p => p.id === projectId)?.current_code;
-    
-      if (foundCode) {
-        setCode(foundCode);
-        setLoading(false);
+    try{
+      const { data } = await api.get(`/api/project/preview/${projectId}`);
+      setCode(data.project.current_code);
+      if(versionId) {
+        data.project.versions.forEach((version: Version) => {
+          if(version.id === versionId) {
+            setCode(version.code);
+          }
+        });
       }
-    }, 4000); // Slightly longer to let the LoaderStep show progress
-  };
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching code:", error);
+      setLoading(false);
+    }
+ };
 
   useEffect(() => {
-    fetchCode();
-  }, [projectId]);
+    if(!isPending && session?.user) {
+      fetchCode();
+    } 
+
+  }, [session?.user]);
 
 
 return (
