@@ -1,4 +1,3 @@
-import { dummyProjects } from '@/assets/assets';
 import ProjectPreview from '@/components/Projects/ProjectPreview';
 import LoaderStep from '@/components/Projects/LoaderStep'; 
 import type { Project, Version } from '@/types';

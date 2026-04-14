@@ -4,14 +4,7 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import api from "@/Context/axios";
 
-interface plan {
-  id: string;
-  name: string;
-  price: number;
-  credits: number;
-  description: string;
-  features: string[];
-}
+
 
 const appPlans = [
   {

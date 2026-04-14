@@ -5,11 +5,7 @@ import { AccountSettingsCards, DeleteAccountCard, ChangePasswordCard } from "@da
 import { authClient } from "@/lib/auth-client";
 
 // The "Ember" constants for logic-based styling
-const THEME = {
-  ember: "var(--primary)",
-  ash: "var(--muted-foreground)",
-  void: "var(--background)",
-};
+
 
 const NAV_ITEMS = [
   { id: "account", icon: User, label: "Profile", sub: "Identity & preferences", tag: "01" },
